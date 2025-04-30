@@ -1,9 +1,9 @@
 import Redis from "ioredis";
-import { REDIS_URI_CONNECTION } from "../config/redis";
+import { REDIS_URL_CONNECTION } from "../config/redis";
 import util from "util";
 import * as crypto from "crypto";
 
-const redis = new Redis(REDIS_URI_CONNECTION);
+const redis = new Redis(REDIS_URL_CONNECTION);
 
 function encryptParams(params: any) {
   const str = JSON.stringify(params);

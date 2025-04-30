@@ -33,7 +33,7 @@ import { ClosedAllOpenTickets } from "./services/WbotServices/wbotClosedTickets"
 const nodemailer = require('nodemailer');
 const CronJob = require('cron').CronJob;
 
-const connection = process.env.REDIS_URI || "";
+const connection = process.env.REDIS_URL || "";
 const limiterMax = process.env.REDIS_OPT_LIMITER_MAX || 1;
 const limiterDuration = process.env.REDIS_OPT_LIMITER_DURATION || 3000;
 
