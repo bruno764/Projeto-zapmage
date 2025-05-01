@@ -74,16 +74,13 @@
     "zustand": "^3.7.2"
   },
   "scripts": {
-  "build": "cross-env NODE_OPTIONS=--openssl-legacy-provider GENERATE_SOURCEMAP=false react-scripts build",
-  "start": "serve -s build -l $PORT"
-},
-"postinstall": "npm run build",
-"dependencies": {
-  "serve": "^14.2.4"
-},
-"devDependencies": {
-  "cross-env": "^7.0.3"
-},
+    "build": "cross-env NODE_OPTIONS=--openssl-legacy-provider GENERATE_SOURCEMAP=false react-scripts build",
+    "start": "serve -s build -l $PORT"
+  },
+  "postinstall": "npm run build",
+  "devDependencies": {
+    "cross-env": "^7.0.3"
+  },
   "eslintConfig": {
     "extends": "react-app"
   },
