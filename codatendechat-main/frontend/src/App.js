@@ -8,7 +8,7 @@ import { createTheme, ThemeProvider } from "@material-ui/core/styles";
 import { useMediaQuery } from "@material-ui/core";
 
 import ColorModeContext from "./layout/themeContext";
-import { SocketContext, SocketManager } from "./context/Socket/SocketContext";
+import { SocketManager } from "./context/Socket/SocketContext";
 
 import Routes from "./routes";
 
@@ -16,6 +16,8 @@ const queryClient = new QueryClient();
 
 const App = () => {
   const [locale, setLocale] = useState();
+
+  // detecta preferência de tema do sistema ou salva em localStorage
   const prefersDarkMode = useMediaQuery("(prefers-color-scheme: dark)");
   const preferredTheme = window.localStorage.getItem("preferredTheme");
   const [mode, setMode] = useState(
@@ -26,37 +28,36 @@ const App = () => {
       : "light"
   );
 
-  // Cria UMA instância de SocketManager (não a classe pura)
-  const socketManager = useMemo(() => new SocketManager(), []);
-
+  // contexto para alternar manualmente o tema
   const colorMode = useMemo(
     () => ({
       toggleColorMode: () => {
-        setMode((prevMode) => (prevMode === "light" ? "dark" : "light"));
-      },
+        setMode((prev) => (prev === "light" ? "dark" : "light"));
+      }
     }),
     []
   );
 
+  // cria o tema Material-UI com suas cores e estilos de scrollbar
   const theme = createTheme(
     {
       scrollbarStyles: {
         "&::-webkit-scrollbar": {
           width: "8px",
-          height: "8px",
+          height: "8px"
         },
         "&::-webkit-scrollbar-thumb": {
           boxShadow: "inset 0 0 6px rgba(0, 0, 0, 0.3)",
-          backgroundColor: "#682EE3",
-        },
+          backgroundColor: "#682EE3"
+        }
       },
       scrollbarStylesSoft: {
         "&::-webkit-scrollbar": {
-          width: "8px",
+          width: "8px"
         },
         "&::-webkit-scrollbar-thumb": {
-          backgroundColor: mode === "light" ? "#F3F3F3" : "#333333",
-        },
+          backgroundColor: mode === "light" ? "#F3F3F3" : "#333333"
+        }
       },
       palette: {
         type: mode,
@@ -89,22 +90,22 @@ const App = () => {
             : "#666",
         boxticket: mode === "light" ? "#EEE" : "#666",
         campaigntab: mode === "light" ? "#ededed" : "#666",
-        mediainput: mode === "light" ? "#ededed" : "#1c1c1c",
+        mediainput: mode === "light" ? "#ededed" : "#1c1c1c"
       },
-      mode,
+      mode
     },
     locale
   );
 
+  // configura locale de datas e textos
   useEffect(() => {
-    const i18nlocale = localStorage.getItem("i18nextLng");
-    const browserLocale = i18nlocale?.substring(0, 2) ?? "pt";
-
-    if (browserLocale === "pt") setLocale(ptBR);
-    else if (browserLocale === "en") setLocale(enUS);
-    else if (browserLocale === "es") setLocale(esES);
+    const lng = localStorage.getItem("i18nextLng")?.substring(0, 2) ?? "pt";
+    if (lng === "pt") setLocale(ptBR);
+    else if (lng === "en") setLocale(enUS);
+    else if (lng === "es") setLocale(esES);
   }, []);
 
+  // persiste escolha de tema
   useEffect(() => {
     window.localStorage.setItem("preferredTheme", mode);
   }, [mode]);
@@ -113,10 +114,9 @@ const App = () => {
     <ColorModeContext.Provider value={{ colorMode }}>
       <ThemeProvider theme={theme}>
         <QueryClientProvider client={queryClient}>
-          {/* passe a instância já criada */}
-          <SocketContext.Provider value={socketManager}>
+          <SocketManager>
             <Routes />
-          </SocketContext.Provider>
+          </SocketManager>
         </QueryClientProvider>
       </ThemeProvider>
     </ColorModeContext.Provider>
