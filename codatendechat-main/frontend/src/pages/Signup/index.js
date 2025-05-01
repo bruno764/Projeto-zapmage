@@ -1,259 +1,274 @@
 import React, { useState, useEffect } from "react";
-import qs from 'query-string'
-
+import qs from "query-string";
 import * as Yup from "yup";
-import { useHistory } from "react-router-dom";
-import { Link as RouterLink } from "react-router-dom";
+import { useHistory, Link as RouterLink } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Formik, Form, Field } from "formik";
 import usePlans from "../../hooks/usePlans";
-import Avatar from "@material-ui/core/Avatar";
-import Button from "@material-ui/core/Button";
-import CssBaseline from "@material-ui/core/CssBaseline";
-import TextField from "@material-ui/core/TextField";
-import Link from "@material-ui/core/Link";
-import Grid from "@material-ui/core/Grid";
-import Box from "@material-ui/core/Box";
-import InputMask from 'react-input-mask';
+
 import {
-	FormControl,
-	InputLabel,
-	MenuItem,
-	Select,
+  Avatar,
+  Button,
+  CssBaseline,
+  TextField,
+  Link,
+  Grid,
+  Box,
+  InputLabel,
+  MenuItem,
+  Select,
+  FormControl,
+  Container,
+  Typography,
+  makeStyles
 } from "@material-ui/core";
-import LockOutlinedIcon from "@material-ui/icons/LockOutlined";
-import Typography from "@material-ui/core/Typography";
-import { makeStyles } from "@material-ui/core/styles";
-import Container from "@material-ui/core/Container";
+
+import InputMask from "react-input-mask";
 import logo from "../../assets/logo.png";
 import { i18n } from "../../translate/i18n";
-
 import { openApi } from "../../services/api";
 import toastError from "../../errors/toastError";
 import moment from "moment";
-const Copyright = () => {
-	return (
-		<Typography variant="body2" color="textSecondary" align="center">
-			{"Copyright © "}
-			<Link color="inherit" href="#">
-				PLW
-			</Link>{" "}
-		   {new Date().getFullYear()}
-			{"."}
-		</Typography>
-	);
-};
 
-const useStyles = makeStyles(theme => ({
-	paper: {
-		marginTop: theme.spacing(8),
-		display: "flex",
-		flexDirection: "column",
-		alignItems: "center",
-	},
-	avatar: {
-		margin: theme.spacing(1),
-		backgroundColor: theme.palette.secondary.main,
-	},
-	form: {
-		width: "100%",
-		marginTop: theme.spacing(3),
-	},
-	submit: {
-		margin: theme.spacing(3, 0, 2),
-	},
+const useStyles = makeStyles((theme) => ({
+  paper: {
+    marginTop: theme.spacing(8),
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center"
+  },
+  form: {
+    width: "100%",
+    marginTop: theme.spacing(3)
+  },
+  submit: {
+    margin: theme.spacing(3, 0, 2)
+  }
 }));
 
 const UserSchema = Yup.object().shape({
-	name: Yup.string()
-		.min(2, i18n.t("signup.formErrors.name.short"))
-		.max(50, i18n.t("signup.formErrors.name.long"))
-		.required(i18n.t("signup.formErrors.name.required")),
-	password: Yup.string().min(5, i18n.t("signup.formErrors.password.short")).max(50, i18n.t("signup.formErrors.password.long")),
-	email: Yup.string().email(i18n.t("signup.formErrors.email.invalid")).required(i18n.t("signup.formErrors.email.required")),
+  name: Yup.string()
+    .min(2, i18n.t("signup.formErrors.name.short"))
+    .max(50, i18n.t("signup.formErrors.name.long"))
+    .required(i18n.t("signup.formErrors.name.required")),
+  password: Yup.string()
+    .min(5, i18n.t("signup.formErrors.password.short"))
+    .max(50, i18n.t("signup.formErrors.password.long")),
+  email: Yup.string()
+    .email(i18n.t("signup.formErrors.email.invalid"))
+    .required(i18n.t("signup.formErrors.email.required"))
 });
 
 const SignUp = () => {
-	const classes = useStyles();
-	const history = useHistory();
-	let companyId = null
+  const classes = useStyles();
+  const history = useHistory();
 
-	const params = qs.parse(window.location.search)
-	if (params.companyId !== undefined) {
-		companyId = params.companyId
-	}
+  // pega ?companyId=...
+  const params = qs.parse(window.location.search);
+  const companyId = params.companyId || null;
 
-	const initialState = { name: "", email: "", phone: "", password: "", planId: "", };
+  const initialState = {
+    name: "",
+    email: "",
+    phone: "",
+    password: "",
+    planId: ""
+  };
 
-	const [user] = useState(initialState);
-	const dueDate = moment().add(3, "day").format();
-	const handleSignUp = async values => {
-		Object.assign(values, { recurrence: "MENSAL" });
-		Object.assign(values, { dueDate: dueDate });
-		Object.assign(values, { status: "t" });
-		Object.assign(values, { campaignsEnabled: true });
-		try {
-			await openApi.post("/companies/cadastro", values);
-			toast.success(i18n.t("signup.toasts.success"));
-			history.push("/login");
-		} catch (err) {
-			console.log(err);
-			toastError(err);
-		}
-	};
+  const [plans, setPlans] = useState([]);
+  const { list: listPlans } = usePlans();
 
-	const [plans, setPlans] = useState([]);
-	const { list: listPlans } = usePlans();
+  useEffect(() => {
+    (async () => {
+      try {
+        const list = await listPlans(companyId);
+        // só setamos se for array
+        if (Array.isArray(list)) {
+          setPlans(list);
+        } else {
+          console.warn("listPlans retornou não-array:", list);
+        }
+      } catch (err) {
+        toastError(err);
+      }
+    })();
+  }, [companyId, listPlans]);
 
-	useEffect(() => {
-		async function fetchData() {
-			const list = await listPlans();
-			setPlans(list);
-		}
-		fetchData();
-	}, []);
+  const dueDate = moment().add(3, "day").toISOString();
 
+  const handleSignUp = async (values) => {
+    try {
+      const payload = {
+        ...values,
+        recurrence: "MENSAL",
+        dueDate,
+        status: "t",
+        campaignsEnabled: true,
+        companyId
+      };
+      await openApi.post("/companies/cadastro", payload);
+      toast.success(i18n.t("signup.toasts.success"));
+      history.push("/login");
+    } catch (err) {
+      toastError(err);
+    }
+  };
 
-	return (
-		<Container component="main" maxWidth="xs">
-			<CssBaseline />
-			<div className={classes.paper}>
-				<div>
-					<center><img style={{ margin: "0 auto", width: "70%" }} src={logo} alt="Whats" /></center>
-				</div>
-				{/*<Typography component="h1" variant="h5">
-					{i18n.t("signup.title")}
-				</Typography>*/}
-				{/* <form className={classes.form} noValidate onSubmit={handleSignUp}> */}
-				<Formik
-					initialValues={user}
-					enableReinitialize={true}
-					validationSchema={UserSchema}
-					onSubmit={(values, actions) => {
-						setTimeout(() => {
-							handleSignUp(values);
-							actions.setSubmitting(false);
-						}, 400);
-					}}
-				>
-					{({ touched, errors, isSubmitting }) => (
-						<Form className={classes.form}>
-							<Grid container spacing={2}>
-								<Grid item xs={12}>
-									<Field
-										as={TextField}
-										autoComplete="name"
-										name="name"
-										error={touched.name && Boolean(errors.name)}
-										helperText={touched.name && errors.name}
-										variant="outlined"
-										fullWidth
-										id="name"
-										label={i18n.t("signup.form.name")}
-									/>
-								</Grid>
+  return (
+    <Container component="main" maxWidth="xs">
+      <CssBaseline />
 
-								<Grid item xs={12}>
-									<Field
-										as={TextField}
-										variant="outlined"
-										fullWidth
-										id="email"
-										label={i18n.t("signup.form.email")}
-										name="email"
-										error={touched.email && Boolean(errors.email)}
-										helperText={touched.email && errors.email}
-										autoComplete="email"
-										required
-									/>
-								</Grid>
-								
-							<Grid item xs={12}>
-								<Field
-									as={InputMask}
-									mask="(99) 99999-9999"
-									variant="outlined"
-									fullWidth
-									id="phone"
-									name="phone"
-									error={touched.phone && Boolean(errors.phone)}
-									helperText={touched.phone && errors.phone}
-									autoComplete="phone"
-									required
-								>
-									{({ field }) => (
-										<TextField
-											{...field}
-											variant="outlined"
-											fullWidth
-											label={i18n.t("signup.form.phone")}
-											inputProps={{ maxLength: 11 }} // Definindo o limite de caracteres
-										/>
-									)}
-								</Field>
-							</Grid>
-								<Grid item xs={12}>
-									<Field
-										as={TextField}
-										variant="outlined"
-										fullWidth
-										name="password"
-										error={touched.password && Boolean(errors.password)}
-										helperText={touched.password && errors.password}
-										label={i18n.t("signup.form.password")}
-										type="password"
-										id="password"
-										autoComplete="current-password"
-										required
-									/>
-								</Grid>
-								<Grid item xs={12}>
-									<InputLabel htmlFor="plan-selection">Plano</InputLabel>
-									<Field
-										as={Select}
-										variant="outlined"
-										fullWidth
-										id="plan-selection"
-										label={i18n.t("signup.form.plan")}
-										name="planId"
-										required
-									>
-										{plans.map((plan, key) => (
-											<MenuItem key={key} value={plan.id}>
-												{plan.name} - {i18n.t("signup.plan.attendant")}: {plan.users} - {i18n.t("signup.plan.whatsapp")}: {plan.connections} - {i18n.t("signup.plan.queues")}: {plan.queues} - R$ {plan.value}
-											</MenuItem>
-										))}
-									</Field>
-								</Grid>
-							</Grid>
-							<Button
-								type="submit"
-								fullWidth
-								variant="contained"
-								color="primary"
-								className={classes.submit}
-							>
-								{i18n.t("signup.buttons.submit")}
-							</Button>
-							<Grid container justify="flex-end">
-								<Grid item>
-									<Link
-										href="#"
-										variant="body2"
-										component={RouterLink}
-										to="/login"
-									>
-										{i18n.t("signup.buttons.login")}
-									</Link>
-								</Grid>
-							</Grid>
-						</Form>
-					)}
-				</Formik>
-			</div>
-			<Box mt={5}>{/* <Copyright /> */}</Box>
-		</Container>
-	);
+      <div className={classes.paper}>
+        <img src={logo} alt="Logo" style={{ width: "70%" }} />
+
+        <Formik
+          initialValues={initialState}
+          enableReinitialize
+          validationSchema={UserSchema}
+          onSubmit={async (values, actions) => {
+            await handleSignUp(values);
+            actions.setSubmitting(false);
+          }}
+        >
+          {({ touched, errors, isSubmitting }) => (
+            <Form className={classes.form}>
+              <Grid container spacing={2}>
+                {/* Nome */}
+                <Grid item xs={12}>
+                  <Field
+                    as={TextField}
+                    name="name"
+                    variant="outlined"
+                    fullWidth
+                    label={i18n.t("signup.form.name")}
+                    error={touched.name && Boolean(errors.name)}
+                    helperText={touched.name && errors.name}
+                    autoComplete="name"
+                  />
+                </Grid>
+
+                {/* Email */}
+                <Grid item xs={12}>
+                  <Field
+                    as={TextField}
+                    name="email"
+                    variant="outlined"
+                    fullWidth
+                    label={i18n.t("signup.form.email")}
+                    error={touched.email && Boolean(errors.email)}
+                    helperText={touched.email && errors.email}
+                    autoComplete="email"
+                    required
+                  />
+                </Grid>
+
+                {/* Telefone */}
+                <Grid item xs={12}>
+                  <Field
+                    as={InputMask}
+                    mask="(99) 99999-9999"
+                    name="phone"
+                    required
+                  >
+                    {({ field }) => (
+                      <TextField
+                        {...field}
+                        variant="outlined"
+                        fullWidth
+                        label={i18n.t("signup.form.phone")}
+                        inputProps={{ maxLength: 11 }}
+                        error={touched.phone && Boolean(errors.phone)}
+                        helperText={touched.phone && errors.phone}
+                      />
+                    )}
+                  </Field>
+                </Grid>
+
+                {/* Senha */}
+                <Grid item xs={12}>
+                  <Field
+                    as={TextField}
+                    name="password"
+                    variant="outlined"
+                    fullWidth
+                    label={i18n.t("signup.form.password")}
+                    type="password"
+                    error={touched.password && Boolean(errors.password)}
+                    helperText={touched.password && errors.password}
+                    autoComplete="new-password"
+                    required
+                  />
+                </Grid>
+
+                {/* Plano */}
+                <Grid item xs={12}>
+                  <FormControl variant="outlined" fullWidth required>
+                    <InputLabel id="plan-label">
+                      {i18n.t("signup.form.plan")}
+                    </InputLabel>
+                    <Field
+                      as={Select}
+                      labelId="plan-label"
+                      name="planId"
+                      label={i18n.t("signup.form.plan")}
+                    >
+                      {plans.length > 0 ? (
+                        plans.map((plan) => (
+                          <MenuItem key={plan.id} value={plan.id}>
+                            {plan.name} – R$ {plan.value}
+                          </MenuItem>
+                        ))
+                      ) : (
+                        <MenuItem value="" disabled>
+                          {companyId
+                            ? "Carregando planos..."
+                            : "Nenhum plano disponível"}
+                        </MenuItem>
+                      )}
+                    </Field>
+                  </FormControl>
+                </Grid>
+              </Grid>
+
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                color="primary"
+                className={classes.submit}
+                disabled={isSubmitting}
+              >
+                {i18n.t("signup.buttons.submit")}
+              </Button>
+
+              <Grid container justifyContent="flex-end">
+                <Grid item>
+                  <Link
+                    component={RouterLink}
+                    to="/login"
+                    variant="body2"
+                  >
+                    {i18n.t("signup.buttons.login")}
+                  </Link>
+                </Grid>
+              </Grid>
+            </Form>
+          )}
+        </Formik>
+      </div>
+
+      <Box mt={5}>
+        <Typography variant="body2" color="textSecondary" align="center">
+          {"Copyright © "}
+          <Link color="inherit" href="#">
+            PLW
+          </Link>{" "}
+          {new Date().getFullYear()}
+          {"."}
+        </Typography>
+      </Box>
+    </Container>
+  );
 };
 
 export default SignUp;
