@@ -1,40 +1,62 @@
 // src/config/database.ts
 import { Dialect } from "sequelize";
+import * as dotenv from "dotenv";
+dotenv.config(); // carrega as variáveis do .env (LOCAL) ou do Railway
 
-// Validações iniciais para garantir que as ENV existam
-if (!process.env.DB_DIALECT) {
-  throw new Error("Variável de ambiente DB_DIALECT não definida");
-}
-if (!process.env.DB_HOST) {
-  throw new Error("Variável de ambiente DB_HOST não definida");
-}
-if (!process.env.DB_NAME) {
-  throw new Error("Variável de ambiente DB_NAME não definida");
-}
-if (!process.env.DB_USER) {
-  throw new Error("Variável de ambiente DB_USER não definida");
-}
-if (!process.env.DB_PASS) {
-  throw new Error("Variável de ambiente DB_PASS não definida");
+// Desestruturação das variáveis
+const {
+  DATABASE_URL,
+  DB_DIALECT,
+  DB_HOST,
+  DB_PORT,
+  DB_NAME,
+  DB_USER,
+  DB_PASS,
+  DB_DEBUG,
+} = process.env;
+
+// Auxiliar para converter porta
+const port = DB_PORT ? parseInt(DB_PORT, 10) : undefined;
+
+export interface IDatabaseConfig {
+  // se usar connection string (Railway/Heroku) presente em DATABASE_URL
+  url?: string;
+  dialect: Dialect;
+  host?: string;
+  port?: number;
+  database?: string;
+  username?: string;
+  password?: string;
+  define: {
+    charset: string;
+    collate: string;
+  };
+  timezone: string;
+  logging: boolean | ((sql: string) => void);
+  pool: {
+    max: number;
+    min: number;
+    acquire: number;
+    idle: number;
+    evict: number;
+  };
+  retry: {
+    max: number;
+    timeout: number;
+    match: RegExp[];
+  };
 }
 
-const databaseConfig = {
+// Configuração base comum
+const base: Omit<IDatabaseConfig, "dialect"> = {
   define: {
     charset: "utf8mb4",
     collate: "utf8mb4_bin",
   },
-  // Aqui garantimos que o dialect sempre virá da ENV
-  dialect: process.env.DB_DIALECT as Dialect,
   timezone: "-03:00",
-  host: process.env.DB_HOST,
-  port: Number(process.env.DB_PORT || 5432),
-  database: process.env.DB_NAME,
-  username: process.env.DB_USER,
-  password: process.env.DB_PASS,
   logging:
-    process.env.DB_DEBUG === "true"
-      ? (msg: string) =>
-          console.log(`[Sequelize] ${new Date().toISOString()}: ${msg}`)
+    DB_DEBUG === "true"
+      ? (msg) => console.log(`[Sequelize] ${new Date().toISOString()}: ${msg}`)
       : false,
   pool: {
     max: 20,
@@ -61,4 +83,29 @@ const databaseConfig = {
   },
 };
 
-export default databaseConfig;
+let config: IDatabaseConfig;
+
+if (DATABASE_URL) {
+  // Usando connection string completa (recomendado em produção no Railway)
+  config = {
+    url: DATABASE_URL,
+    dialect: "postgres",
+    ...base,
+  };
+} else {
+  // Fallback p/ desenvolver localmente sem URL
+  if (!DB_HOST) {
+    throw new Error("Variável de ambiente DB_HOST não definida");
+  }
+  config = {
+    dialect: (DB_DIALECT as Dialect) || "postgres",
+    host: DB_HOST,
+    port,
+    database: DB_NAME,
+    username: DB_USER,
+    password: DB_PASS,
+    ...base,
+  };
+}
+
+export default config;

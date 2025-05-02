@@ -1,14 +1,9 @@
 // src/database/index.ts
-import { config } from "dotenv";
-config(); // carrega as variáveis de .env
-
+import "../bootstrap";           // se você tiver inicializações gerais
 import { Sequelize } from "sequelize-typescript";
-import path from "path";
-
-// importe a sua configuração já validada de src/config/database.ts
 import databaseConfig from "../config/database";
 
-// importe todos os seus modelos
+// importe todos os seus modelos aqui
 import Company from "../models/Company";
 import User from "../models/User";
 import Contact from "../models/Contact";
@@ -53,57 +48,53 @@ import { FlowAudioModel } from "../models/FlowAudio";
 import { FlowCampaignModel } from "../models/FlowCampaign";
 import { FlowImgModel } from "../models/FlowImg";
 
-// monta o array dinamicamente (se preferir manter manual, basta usar o array abaixo)
-const models = [
-  Company,
-  User,
-  Contact,
-  Ticket,
-  Message,
-  Whatsapp,
-  ContactCustomField,
-  Setting,
-  Queue,
-  WhatsappQueue,
-  UserQueue,
-  Plan,
-  TicketNote,
-  QuickMessage,
-  Help,
-  TicketTraking,
-  UserRating,
-  QueueOption,
-  Schedule,
-  Tag,
-  TicketTag,
-  ContactList,
-  ContactListItem,
-  Campaign,
-  CampaignSetting,
-  Baileys,
-  CampaignShipping,
-  Announcement,
-  Chat,
-  ChatUser,
-  ChatMessage,
-  Invoices,
-  Subscriptions,
-  BaileysChats,
-  Files,
-  FilesOptions,
-  Prompt,
-  QueueIntegrations,
-  FlowDefaultModel,
-  FlowBuilderModel,
-  FlowAudioModel,
-  FlowCampaignModel,
-  FlowImgModel,
-];
-
-// Cria a instância do Sequelize já com o dialect vindo de databaseConfig
 const sequelize = new Sequelize({
-  ...databaseConfig,
-  models, // registra todos os seus modelos
+  ...databaseConfig,  // url ou host/port/db/user/pass
+  models: [
+    Company,
+    User,
+    Contact,
+    Ticket,
+    Message,
+    Whatsapp,
+    ContactCustomField,
+    Setting,
+    Queue,
+    WhatsappQueue,
+    UserQueue,
+    Plan,
+    TicketNote,
+    QuickMessage,
+    Help,
+    TicketTraking,
+    UserRating,
+    QueueOption,
+    Schedule,
+    Tag,
+    TicketTag,
+    ContactList,
+    ContactListItem,
+    Campaign,
+    CampaignSetting,
+    Baileys,
+    CampaignShipping,
+    Announcement,
+    Chat,
+    ChatUser,
+    ChatMessage,
+    Invoices,
+    Subscriptions,
+    BaileysChats,
+    Files,
+    FilesOptions,
+    Prompt,
+    QueueIntegrations,
+    FlowDefaultModel,
+    FlowBuilderModel,
+    FlowAudioModel,
+    FlowCampaignModel,
+    FlowImgModel,
+  ],
 });
 
 export default sequelize;
