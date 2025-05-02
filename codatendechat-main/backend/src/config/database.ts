@@ -1,20 +1,24 @@
+// src/config/database.ts
 import "../bootstrap";
+import { Dialect } from "sequelize";
 
-module.exports = {
+const config = {
   define: {
     charset: "utf8mb4",
     collate: "utf8mb4_bin",
   },
-  dialect: process.env.DB_DIALECT || "mysql",
+  dialect: process.env.DB_DIALECT as Dialect,
   timezone: "-03:00",
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT || 3306,
-  database: process.env.DB_NAME,
-  username: process.env.DB_USER,
-  password: process.env.DB_PASS,
-  logging: process.env.DB_DEBUG === "true" 
-    ? (msg) => console.log(`[Sequelize] ${new Date().toISOString()}: ${msg}`) 
-    : false,
+  host: process.env.DB_HOST!,
+  port: Number(process.env.DB_PORT),
+  database: process.env.DB_NAME!,
+  username: process.env.DB_USER!,
+  password: process.env.DB_PASS!,
+  logging:
+    process.env.DB_DEBUG === "true"
+      ? (msg: string) =>
+          console.log(`[Sequelize] ${new Date().toISOString()}: ${msg}`)
+      : false,
   pool: {
     max: 20,
     min: 1,
@@ -35,7 +39,9 @@ module.exports = {
       /SequelizeInvalidConnectionError/,
       /SequelizeConnectionAcquireTimeoutError/,
       /Operation timeout/,
-      /ETIMEDOUT/
-    ]
+      /ETIMEDOUT/,
+    ],
   },
 };
+
+export default config;
