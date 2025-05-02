@@ -1,4 +1,0 @@
-{
-  "private": true,
-  "workspaces": ["codatendechat-main/backend", "codatendechat-main/frontend"]
-}
