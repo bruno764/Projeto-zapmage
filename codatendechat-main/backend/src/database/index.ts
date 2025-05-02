@@ -1,15 +1,25 @@
+// src/database/index.ts
+import { config } from "dotenv";
+config(); // carrega as variáveis de .env
+
 import { Sequelize } from "sequelize-typescript";
+import path from "path";
+
+// importe a sua configuração já validada de src/config/database.ts
+import databaseConfig from "../config/database";
+
+// importe todos os seus modelos
+import Company from "../models/Company";
 import User from "../models/User";
-import Setting from "../models/Setting";
 import Contact from "../models/Contact";
 import Ticket from "../models/Ticket";
+import Message from "../models/Message";
 import Whatsapp from "../models/Whatsapp";
 import ContactCustomField from "../models/ContactCustomField";
-import Message from "../models/Message";
+import Setting from "../models/Setting";
 import Queue from "../models/Queue";
 import WhatsappQueue from "../models/WhatsappQueue";
 import UserQueue from "../models/UserQueue";
-import Company from "../models/Company";
 import Plan from "../models/Plan";
 import TicketNote from "../models/TicketNote";
 import QuickMessage from "../models/QuickMessage";
@@ -43,12 +53,7 @@ import { FlowAudioModel } from "../models/FlowAudio";
 import { FlowCampaignModel } from "../models/FlowCampaign";
 import { FlowImgModel } from "../models/FlowImg";
 
-// eslint-disable-next-line
-const dbConfig = require("../config/database");
-// import dbConfig from "../config/database";
-
-const sequelize = new Sequelize(dbConfig);
-
+// monta o array dinamicamente (se preferir manter manual, basta usar o array abaixo)
 const models = [
   Company,
   User,
@@ -95,6 +100,10 @@ const models = [
   FlowImgModel,
 ];
 
-sequelize.addModels(models);
+// Cria a instância do Sequelize já com o dialect vindo de databaseConfig
+const sequelize = new Sequelize({
+  ...databaseConfig,
+  models, // registra todos os seus modelos
+});
 
 export default sequelize;
