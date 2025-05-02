@@ -9,42 +9,16 @@ if (!url) {
 }
 
 export default {
+  // aqui você passa a string completa para o Sequelize
   url,
+
+  // força Postgres (em Railway sempre é Postgres)
   dialect: "postgres" as Dialect,
 
-  define: {
-    charset: "utf8mb4",
-    collate: "utf8mb4_bin"
-  },
+  // opcionalmente mantenha pool, retry, define, timezone etc.
+  define: { charset: "utf8mb4", collate: "utf8mb4_bin" },
   timezone: "-03:00",
-
-  logging:
-    process.env.DB_DEBUG === "true"
-      ? (sql: string) => console.log(`[Sequelize] ${new Date().toISOString()}: ${sql}`)
-      : false,
-
-  pool: {
-    max: 20,
-    min: 1,
-    acquire: 0,
-    idle: 30_000,
-    evict: 1000 * 60 * 5
-  },
-
-  retry: {
-    max: 3,
-    timeout: 30_000,
-    match: [
-      /Deadlock/i,
-      /SequelizeConnectionError/,
-      /SequelizeConnectionRefusedError/,
-      /SequelizeConnectionTimedOutError/,
-      /SequelizeHostNotFoundError/,
-      /SequelizeHostNotReachableError/,
-      /SequelizeInvalidConnectionError/,
-      /SequelizeConnectionAcquireTimeoutError/,
-      /Operation timeout/,
-      /ETIMEDOUT/
-    ]
-  }
+  logging: false,
+  pool: { max: 20, min: 1, acquire: 0, idle: 30_000, evict: 1000 * 60 * 5 },
+  retry: { max: 3, timeout: 30_000, match: [ /ETIMEDOUT/ ] },
 };

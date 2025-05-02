@@ -98,17 +98,15 @@ const MODELS = [
   FlowImgModel,
 ]
 
-// pega a URL de conexão do Postgres diretamente
-const url = process.env.DATABASE_URL
-if (!url) {
-  throw new Error("DATABASE_URL não definida — verifique suas variáveis de ambiente")
-}
+// se tiver conexão por URL, use este construtor:
+const sequelize = new Sequelize(dbConfig.url!, {
+  dialect: dbConfig.dialect,
+  define:      dbConfig.define,
+  timezone:    dbConfig.timezone,
+  logging:     dbConfig.logging,
+  pool:        dbConfig.pool,
+  retry:       dbConfig.retry,
+  models: [ Company, User /* … */ ]
+});
 
-export const sequelize = new Sequelize(url, {
-  dialect: "postgres",
-  models: MODELS,
-  // injeta configurações adicionais de pool, logging, define e retry:
-  ...databaseConfig,
-})
-
-export default sequelize
+export default sequelize;
