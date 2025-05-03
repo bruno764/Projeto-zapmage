@@ -1,11 +1,11 @@
 // src/database/index.ts
 
-import "../bootstrap"                // se você tiver inicializações gerais
+import "../bootstrap"                // inicializações gerais
 import { config } from "dotenv"
 config()                            // carrega .env, incluindo DATABASE_URL
 
 import { Sequelize } from "sequelize-typescript"
-import databaseConfig from "../config/database"  // suas outras opções (pool, logging, define, retry, etc.)
+import databaseConfig from "../config/database"  // seu config/database.ts
 
 // todos os seus modelos
 import Company from "../models/Company"
@@ -98,15 +98,15 @@ const MODELS = [
   FlowImgModel,
 ]
 
-// se tiver conexão por URL, use este construtor:
-const sequelize = new Sequelize(dbConfig.url!, {
-  dialect: dbConfig.dialect,
-  define:      dbConfig.define,
-  timezone:    dbConfig.timezone,
-  logging:     dbConfig.logging,
-  pool:        dbConfig.pool,
-  retry:       dbConfig.retry,
-  models: [ Company, User /* … */ ]
-});
+// Construtor usando DATABASE_URL via databaseConfig.url
+const sequelize = new Sequelize(databaseConfig.url!, {
+  dialect: databaseConfig.dialect,
+  define:      databaseConfig.define,
+  timezone:    databaseConfig.timezone,
+  logging:     databaseConfig.logging,
+  pool:        databaseConfig.pool,
+  retry:       databaseConfig.retry,
+  models:      MODELS
+})
 
-export default sequelize;
+export default sequelize

@@ -1,30 +1,41 @@
-import "../bootstrap";
+// src/config/database.ts
+import { Dialect } from "sequelize";
+import * as dotenv from "dotenv";
+dotenv.config(); // carrega variáveis de .env (desenvolvimento) ou do ambiente (produção)
 
-module.exports = {
+// Pega a connection string completa
+const url = process.env.DATABASE_URL;
+if (!url) {
+  throw new Error("DATABASE_URL não definida — configure a variável de ambiente DATABASE_URL no Railway");
+}
+
+export default {
+  // connection string completa
+  url,
+
+  // como estamos usando Postgres no Railway
+  dialect: "postgres" as Dialect,
+
+  // configurações adicionais que você já tinha
   define: {
     charset: "utf8mb4",
     collate: "utf8mb4_bin",
   },
-  dialect: process.env.DB_DIALECT || "progress",
   timezone: "-03:00",
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT || 3306,
-  database: process.env.DB_NAME,
-  username: process.env.DB_USER,
-  password: process.env.DB_PASS,
-  logging: process.env.DB_DEBUG === "true" 
-    ? (msg) => console.log(`[Sequelize] ${new Date().toISOString()}: ${msg}`) 
-    : false,
+  logging:
+    process.env.DB_DEBUG === "true"
+      ? (msg: string) => console.log(`[Sequelize] ${new Date().toISOString()}: ${msg}`)
+      : false,
   pool: {
     max: 20,
     min: 1,
     acquire: 0,
-    idle: 30000,
+    idle: 30_000,
     evict: 1000 * 60 * 5,
   },
   retry: {
     max: 3,
-    timeout: 30000,
+    timeout: 30_000,
     match: [
       /Deadlock/i,
       /SequelizeConnectionError/,
@@ -35,7 +46,7 @@ module.exports = {
       /SequelizeInvalidConnectionError/,
       /SequelizeConnectionAcquireTimeoutError/,
       /Operation timeout/,
-      /ETIMEDOUT/
-    ]
+      /ETIMEDOUT/,
+    ],
   },
 };
