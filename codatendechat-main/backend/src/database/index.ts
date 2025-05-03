@@ -4,6 +4,8 @@ import "../bootstrap"                // inicializações gerais
 import { config } from "dotenv"
 config()                            // carrega .env, incluindo DATABASE_URL
 
+console.log("🔍 DATABASE_URL =", process.env.DATABASE_URL);
+
 import { Sequelize } from "sequelize-typescript"
 import databaseConfig from "../config/database"  // seu config/database.ts
 
