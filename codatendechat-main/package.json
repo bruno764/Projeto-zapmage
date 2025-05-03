@@ -1,9 +1,0 @@
-{
-  "devDependencies": {
-    "nodemon": "^3.1.7",
-    "ts-node": "^10.9.2"
-  },
-  "dependencies": {
-    "sequelize-typescript": "^2.1.6"
-  }
-}
